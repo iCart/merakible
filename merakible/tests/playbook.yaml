@@ -1,0 +1,14 @@
+- name: Just some example for testing
+  hosts: localhost
+  tasks:
+    - name: Just a hello world
+      copy:
+        content: "hello world\n"
+        dest: /tmp/testfile.txt
+    - name: A meraki call
+      meraki_getorg:
+        apikey: 093b24e85df15a3e66f1fc359f4c48493eaa1b73
+        orgid: 549236
+      register: meraki_getorg_result
+    - debug:
+        var: meraki_getorg_result.output
