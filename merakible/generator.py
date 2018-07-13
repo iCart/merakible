@@ -1,6 +1,7 @@
 from meraki import meraki
 import types
 import black
+import inspect
 
 import os
 import shutil
@@ -69,11 +70,16 @@ def main(modules_dir):
 
     for method in generate_methods():
         method_impl = getattr(meraki, method)
-        varnames = method_impl.__code__.co_varnames[:method_impl.__code__.co_argcount]
-        args = {
-            name: {'type': 'str', 'required': False}
-            for name in varnames
-        }
+        signature = inspect.signature(method_impl)
+        args = {}
+        for param in signature.parameters.values():
+            required = param.default is inspect._empty
+            args[param.name] = {
+                'type': 'str', 
+                'required': required,
+                'default': param.default if not required else None
+            }
+
         method_text = MODULE_TEMPLATE.format(arguments=args, method=method)
         method_text = black.format_str(src_contents=method_text, line_length=black.DEFAULT_LINE_LENGTH)
         with open(os.path.join(modules_dir, f'meraki_{method}.py'), 'w') as module_file:
